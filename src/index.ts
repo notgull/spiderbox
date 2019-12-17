@@ -38,6 +38,18 @@ export type ItCallback = SyncCallback | CBCallback | AsyncCallback;
 
 const defaultCallback = (done: SyncCallback) => { done(); };
 
+// type for the global state
+interface GlobalState {
+  executing: boolean;
+  parent: DescribeBlock | null;
+}
+
+// the global state
+const globalState: GlobalState = {
+  executing: false,
+  parent: null
+};
+
 // convert any callback into a callback-based one
 function convertCallback(cb: ItCallback): CBCallback {
   // determine if there is a callback argument
@@ -86,7 +98,7 @@ function runCallbackFunctions(callOn: any, funcs: Array<CBCallback>, done: SyncC
 }
 
 // the block in which tests execute inside of
-class DescribeBlock {
+export class DescribeBlock {
   before: CBCallback;
   beforeEach: CBCallback;
   after: CBCallback;
@@ -100,6 +112,8 @@ class DescribeBlock {
   describes: Array<DescribeBlock>;
 
   private ident: string;
+
+  parent: DescribeBlock | null;
 
   constructor(
     public name: string,
@@ -117,6 +131,8 @@ class DescribeBlock {
     this.tests = [];
     this.describes = [];
 
+    this.parent = null;
+
     this.ident = "";
     for (let i = 0; i < indentation; i++) {
       this.ident += "  ";
@@ -129,6 +145,11 @@ class DescribeBlock {
 
   // execute tests
   execute(done: SyncCallback) {
+    // if we aren't in executing state, throw an error
+    if (!globalState.executing) {
+      throw new Error("Not in execution state");
+    }
+
     if (this.name !== "__global") {
       this.log(this.name);
     } 
@@ -206,41 +227,43 @@ class DescribeBlock {
 }
 
 // global describe block - used as a scope when a Describe block is not defined
-const globalDescribe = new DescribeBlock("__global", -1);
+export const globalDescribe = new DescribeBlock("__global", -1);
 
-// get the current parent describe block
-function getParentBlock(this: any) {
-  let parentBlock = this;
-  if (!(parentBlock instanceof DescribeBlock)) {
-    parentBlock = globalDescribe;
+globalState.parent = globalDescribe;
+
+export function describe(name: string, cb: SyncCallback) {
+  if (globalState.executing) {
+    throw new Error("Cannot define new describe blocks while executing");
   }
-  return parentBlock;
-}
 
-export function describe(this: any, name: string, cb: SyncCallback) {
   // load the parent describe block
-  let parentBlock = getParentBlock.call(this); 
+  const parentBlock = globalState.parent;
 
   // create a new describe block
   const describeBlock = new DescribeBlock(name, parentBlock.indentation + 1);
+  describeBlock.parent = parentBlock;
 
-  cb.call(describeBlock);
+  globalState.parent = describeBlock; 
+  cb.call(describeBlock); 
+  globalState.parent = parentBlock;
 
   parentBlock.describes.push(describeBlock);
 }
 
 // represents a singular It test block
-class ItBlock {
+export class ItBlock {
   test: CBCallback;
   _skip: boolean;
   timeout: number;
   name: string;
+  parent: DescribeBlock | null;
 
   constructor(name: string, test: ItCallback, timeout: number = 10000) {
     this.name = name;
     this.test = convertCallback(test);
     this._skip = false;
     this.timeout = timeout;
+    this.parent = null;
   }
 
   static skipped(name: string): ItBlock {
@@ -254,8 +277,12 @@ class ItBlock {
   }
 }
  
-export function it(this: any, name: string, cb: ItCallback) {
-  let parentBlock = getParentBlock.call(this);
+export function it(name: string, cb: ItCallback) {
+  if (globalState.executing) {
+    throw new Error("Cannot define new it blocks while executing");
+  } 
+
+  let parentBlock = globalState.parent;
 
   // create a new it block
   let itBlock;
@@ -264,9 +291,13 @@ export function it(this: any, name: string, cb: ItCallback) {
   } else {
     itBlock = ItBlock.skipped(name);
   }
+
+  itBlock.parent = parentBlock;
+  parentBlock.tests.push(itBlock);
 }
 
 // run the tests
 export function run(done: SyncCallback = () => {}) {
+  globalState.executing = true;
   globalDescribe.execute(done);
 }

@@ -1,7 +1,7 @@
 "use strict";
 
 /*
- * test.js
+ * core.js
  * Spiderbox - Browser-based testing
  * 
  * Copyright (c) 2019, not_a_seagull
@@ -34,3 +34,43 @@
  */
 
 const spiderbox = require("./../index");
+
+const sbDescribe = spiderbox.describe;
+const sbIt = spiderbox.it;
+const sbRun = spiderbox.run;
+
+const { expect } = require("chai");
+
+function clean() {
+  spiderbox.globalDescribe.tests = [];
+  spiderbox.globalDescribe.describes = [];
+}
+
+// clean up the tree after all executions
+afterEach(clean);
+
+describe("Testing setup tree", () => {
+  beforeEach(() => {
+    sbDescribe("Test root", () => {
+      sbIt("Test 1", () => { });
+      sbIt("Test 2", () => { });
+    });
+  });
+
+  it("should have a describe block at root", () => {
+    expect(spiderbox.globalDescribe.describes).to.have.lengthOf(1);
+    expect(spiderbox.globalDescribe.describes[0]).to.have.property("name", "Test root");
+  });
+
+  it("should have two test blocks", () => {
+    expect(spiderbox.globalDescribe.describes[0].tests).to.have.lengthOf(2); 
+  });
+
+  it("should have the first test block", () => {
+    expect(spiderbox.globalDescribe.describes[0].tests[0]).to.have.property("name", "Test 1");
+  });
+
+  it("should have the second test block", () => {
+    expect(spiderbox.globalDescribe.describes[0].tests[1]).to.have.property("name", "Test 2");
+  });
+});

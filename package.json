@@ -4,11 +4,18 @@
   "description": "Lightweight in-browser testing framework",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "tsc": "npx tsc",
+    "build": "npm run tsc",
+    "test": "npx mocha",
+
+    "buildtest": "npm run build && npm run test"
   },
   "author": "not_a_seagull",
   "license": "BSD-3-Clause",
   "devDependencies": {
-    "mocha": "^6.2.2"
+    "chai": "^4.2.0",
+    "mocha": "^6.2.2",
+    "sinon": "^7.5.0",
+    "typescript": "^3.7.3"
   }
 }

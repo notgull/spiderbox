@@ -42,6 +42,10 @@
     "use strict";
     exports.__esModule = true;
     var defaultCallback = function (done) { done(); };
+    var globalState = {
+        executing: false,
+        parent: null
+    };
     function convertCallback(cb) {
         var funcString = Function.prototype.toString.call(cb);
         var arg = funcString.substring(funcString.indexOf("(") + 1, funcString.indexOf(")"));
@@ -88,6 +92,7 @@
             this.numPending = 0;
             this.tests = [];
             this.describes = [];
+            this.parent = null;
             this.ident = "";
             for (var i = 0; i < indentation; i++) {
                 this.ident += "  ";
@@ -98,6 +103,9 @@
         };
         DescribeBlock.prototype.execute = function (done) {
             var _this = this;
+            if (!globalState.executing) {
+                throw new Error("Not in execution state");
+            }
             if (this.name !== "__global") {
                 this.log(this.name);
             }
@@ -160,18 +168,19 @@
         };
         return DescribeBlock;
     }());
-    var globalDescribe = new DescribeBlock("__global", -1);
-    function getParentBlock() {
-        var parentBlock = this;
-        if (!(parentBlock instanceof DescribeBlock)) {
-            parentBlock = globalDescribe;
-        }
-        return parentBlock;
-    }
+    exports.DescribeBlock = DescribeBlock;
+    exports.globalDescribe = new DescribeBlock("__global", -1);
+    globalState.parent = exports.globalDescribe;
     function describe(name, cb) {
-        var parentBlock = getParentBlock.call(this);
+        if (globalState.executing) {
+            throw new Error("Cannot define new describe blocks while executing");
+        }
+        var parentBlock = globalState.parent;
         var describeBlock = new DescribeBlock(name, parentBlock.indentation + 1);
+        describeBlock.parent = parentBlock;
+        globalState.parent = describeBlock;
         cb.call(describeBlock);
+        globalState.parent = parentBlock;
         parentBlock.describes.push(describeBlock);
     }
     exports.describe = describe;
@@ -182,6 +191,7 @@
             this.test = convertCallback(test);
             this._skip = false;
             this.timeout = timeout;
+            this.parent = null;
         }
         ItBlock.skipped = function (name) {
             var itBlock = new ItBlock(name, defaultCallback, 0);
@@ -193,8 +203,12 @@
         };
         return ItBlock;
     }());
+    exports.ItBlock = ItBlock;
     function it(name, cb) {
-        var parentBlock = getParentBlock.call(this);
+        if (globalState.executing) {
+            throw new Error("Cannot define new it blocks while executing");
+        }
+        var parentBlock = globalState.parent;
         var itBlock;
         if (cb) {
             itBlock = new ItBlock(name, cb);
@@ -202,11 +216,14 @@
         else {
             itBlock = ItBlock.skipped(name);
         }
+        itBlock.parent = parentBlock;
+        parentBlock.tests.push(itBlock);
     }
     exports.it = it;
     function run(done) {
         if (done === void 0) { done = function () { }; }
-        globalDescribe.execute(done);
+        globalState.executing = true;
+        exports.globalDescribe.execute(done);
     }
     exports.run = run;
 });

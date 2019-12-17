@@ -1,0 +1,11 @@
+language: node_js
+node_js: 10
+
+os: linux
+dist: xenial
+
+before_script:
+ - npm run build
+
+script:
+ - npm run test
