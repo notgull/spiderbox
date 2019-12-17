@@ -16,7 +16,7 @@
     "lib": [ "dom", "es2015" ]
   },
   "include": [
-    "src"
+    "src/index.ts"
   ],
   "exclude": [
     "node_modules"

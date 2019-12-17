@@ -130,6 +130,13 @@
                     });
                 };
             };
+            var pendingTest = function (test) {
+                return function (done) {
+                    _this.numPending++;
+                    _this.log("  - " + test.name);
+                    done();
+                };
+            };
             this.before(function () {
                 var descFuncs = [];
                 for (var i = 0; i < _this.describes.length; i++) {
@@ -138,8 +145,11 @@
                 var testFuncs = [];
                 for (var i = 0; i < _this.tests.length; i++) {
                     if (_this.tests[i]._skip) {
+                        testFuncs.push(pendingTest.call(_this, _this.tests[i]));
                     }
-                    testFuncs.push(perTest.call(_this, _this.tests[i]));
+                    else {
+                        testFuncs.push(perTest.call(_this, _this.tests[i]));
+                    }
                 }
                 runCallbackFunctions(_this, descFuncs, function () {
                     runCallbackFunctions(_this, testFuncs, function () {

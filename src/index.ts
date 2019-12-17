@@ -170,6 +170,15 @@ class DescribeBlock {
       };
     };
 
+    // pending test callback
+    const pendingTest = (test: ItBlock) => {
+      return (done: SyncCallback) => {
+        this.numPending++;
+        this.log(`  - ${test.name}`);
+        done();
+      };
+    };
+
     // run before hook
     this.before(() => {
       // execute describes
@@ -181,9 +190,10 @@ class DescribeBlock {
       const testFuncs: Array<CBCallback> = [];
       for (let i = 0; i < this.tests.length; i++) {
         if (this.tests[i]._skip) {
-          // TODO: skip
+          testFuncs.push(pendingTest.call(this, this.tests[i]));
+        } else {
+          testFuncs.push(perTest.call(this, this.tests[i]));
         }
-        testFuncs.push(perTest.call(this, this.tests[i]));
       } 
 
       runCallbackFunctions(this, descFuncs, () => {
