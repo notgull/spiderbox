@@ -40,6 +40,7 @@ const sbIt = spiderbox.it;
 const sbRun = spiderbox.run;
 
 const { expect } = require("chai");
+const sinon = require("sinon");
 
 function clean() {
   spiderbox.globalDescribe.tests = [];
@@ -72,5 +73,31 @@ describe("Testing setup tree", () => {
 
   it("should have the second test block", () => {
     expect(spiderbox.globalDescribe.describes[0].tests[1]).to.have.property("name", "Test 2");
+  });
+});
+
+describe("Testing execution", () => {
+  let call1, call2, call3;
+
+  before(() => {
+    call1 = sinon.fake();
+    call2 = sinon.fake();
+    call3 = sinon.fake();
+  });
+
+  it("should actually execute the calls", (done) => {
+    sbDescribe("Testing01", () => {
+      sbIt("Call01", () => call1());
+      sbIt("Call02", () => call2());
+      sbIt("Call03", () => call3());
+    });
+
+    sbRun(done);
+  });
+
+  it("should have called each of the fakes", () => {
+    expect(call1.called).to.equal(true);
+    expect(call2.called).to.equal(true);
+    expect(call3.called).to.equal(true);
   });
 });

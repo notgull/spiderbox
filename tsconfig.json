@@ -3,7 +3,7 @@
     "allowJs": true,
     "target": "es3",
     "removeComments": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "strict": true,
     "strictNullChecks": false,
     "baseUrl": ".",
@@ -12,6 +12,7 @@
     "module": "umd",
     "downlevelIteration": true,
     "noImplicitAny": true,
+    "declaration": true,
 
     "lib": [ "dom", "es2015" ]
   },

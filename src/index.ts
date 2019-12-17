@@ -172,17 +172,20 @@ export class DescribeBlock {
         this.beforeEach(() => {
           // for timing
           const begin = new Date();
+          let timeout: ReturnType<typeof setTimeout>;
           try {
+            timeout = setTimeout(() => { throw new Error(`Timeout of ${test.timeout} reached`); }, test.timeout);
+
             test.test.call(test, () => {
               // test succeeded
+              clearTimeout(timeout);
               this.numPassing++;
               this.log(`  ✓ ${test.name}`); 
               this.afterEach(done);
             }); 
-
-            setTimeout(() => { throw new Error(`Timeout of ${test.timeout} reached`); }, test.timeout);
           } catch (err) {
             // test has failed
+            clearTimeout(timeout);
             this.numFailing++; 
             this.log(`  ✗ ${test.name}`);
             this.afterEach(done);

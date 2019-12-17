@@ -122,15 +122,18 @@
                 return function (done) {
                     _this.beforeEach(function () {
                         var begin = new Date();
+                        var timeout;
                         try {
+                            timeout = setTimeout(function () { throw new Error("Timeout of " + test.timeout + " reached"); }, test.timeout);
                             test.test.call(test, function () {
+                                clearTimeout(timeout);
                                 _this.numPassing++;
                                 _this.log("  \u2713 " + test.name);
                                 _this.afterEach(done);
                             });
-                            setTimeout(function () { throw new Error("Timeout of " + test.timeout + " reached"); }, test.timeout);
                         }
                         catch (err) {
+                            clearTimeout(timeout);
                             _this.numFailing++;
                             _this.log("  \u2717 " + test.name);
                             _this.afterEach(done);
@@ -227,4 +230,3 @@
     }
     exports.run = run;
 });
-//# sourceMappingURL=index.js.map
