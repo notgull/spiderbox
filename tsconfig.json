@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "target": "es3",
+    "removeComments": true,
+    "sourceMap": true,
+    "strict": true,
+    "strictNullChecks": false,
+    "baseUrl": ".",
+    "outDir": "./",
+    "noEmitOnError": true,
+    "module": "umd",
+    "downlevelIteration": true,
+    "noImplicitAny": true,
+
+    "lib": [ "dom", "es2015" ]
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

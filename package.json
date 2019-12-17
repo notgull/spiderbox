@@ -1,0 +1,11 @@
+{
+  "name": "spiderbox",
+  "version": "0.1.0",
+  "description": "Lightweight in-browser testing framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "not_a_seagull",
+  "license": "BSD-3-Clause"
+}
