@@ -1,1 +1,4 @@
 node_modules/
+
+index.babel.js
+index.terser.js

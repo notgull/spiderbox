@@ -98,7 +98,7 @@ function runCallbackFunctions(callOn: any, funcs: Array<CBCallback>, done: SyncC
 }
 
 // the block in which tests execute inside of
-export class DescribeBlock {
+class DescribeBlock {
   before: CBCallback;
   beforeEach: CBCallback;
   after: CBCallback;
@@ -254,7 +254,7 @@ export function describe(name: string, cb: SyncCallback) {
 }
 
 // represents a singular It test block
-export class ItBlock {
+class ItBlock {
   test: CBCallback;
   _skip: boolean;
   timeout: number;
@@ -280,6 +280,7 @@ export class ItBlock {
   }
 }
  
+// set up an ItBlock
 export function it(name: string, cb: ItCallback) {
   if (globalState.executing) {
     throw new Error("Cannot define new it blocks while executing");
@@ -299,8 +300,18 @@ export function it(name: string, cb: ItCallback) {
   parentBlock.tests.push(itBlock);
 }
 
+// set a before each trigger
+export function beforeEach(cb: ItCallback) {
+  if (globalState.executing) {
+    throw new Error("Cannot define before each while executing");
+  }
+
+  globalState.parent.beforeEach = convertCallback(cb);
+}
+
 // run the tests
-export function run(done: SyncCallback = () => {}) {
+export function run(done: SyncCallback = () => {}): number {
   globalState.executing = true;
   globalDescribe.execute(done);
+  return globalDescribe.numFailing > 0 ? 1 : 0;
 }

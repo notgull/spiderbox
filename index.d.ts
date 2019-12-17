@@ -34,7 +34,7 @@ export declare type SyncCallback = () => void;
 export declare type CBCallback = (done: SyncCallback) => void;
 export declare type AsyncCallback = () => Promise<void>;
 export declare type ItCallback = SyncCallback | CBCallback | AsyncCallback;
-export declare class DescribeBlock {
+declare class DescribeBlock {
     name: string;
     indentation: number;
     before: CBCallback;
@@ -54,7 +54,7 @@ export declare class DescribeBlock {
 }
 export declare const globalDescribe: DescribeBlock;
 export declare function describe(name: string, cb: SyncCallback): void;
-export declare class ItBlock {
+declare class ItBlock {
     test: CBCallback;
     _skip: boolean;
     timeout: number;
@@ -65,4 +65,6 @@ export declare class ItBlock {
     skip(): void;
 }
 export declare function it(name: string, cb: ItCallback): void;
-export declare function run(done?: SyncCallback): void;
+export declare function beforeEach(cb: ItCallback): void;
+export declare function run(done?: SyncCallback): number;
+export {};
