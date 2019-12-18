@@ -222,7 +222,15 @@ class DescribeBlock {
 
       runCallbackFunctions(this, descFuncs, () => {
         runCallbackFunctions(this, testFuncs, () => {
-          this.after(done);
+          this.after(() => {
+            // set up parent's passing values
+            if (!(this.name === "__global")) {
+              this.parent.numPassing += this.numPassing;
+              this.parent.numFailing += this.numFailing;
+              this.parent.numPending += this.numPending;
+            }
+            done();
+          });
         });
       });
     });
@@ -300,18 +308,42 @@ export function it(name: string, cb: ItCallback) {
   parentBlock.tests.push(itBlock);
 }
 
-// set a before each trigger
-export function beforeEach(cb: ItCallback) {
-  if (globalState.executing) {
-    throw new Error("Cannot define before each while executing");
-  }
+// set up specific triggers
+function setTrigger(triggerName: "beforeEach" | "afterEach" | "before" | "after"): (cb: ItCallback) => void {
+  return (cb: ItCallback) => {
+    if (globalState.executing) {
+      throw new Error(`Cannot define ${triggerName} blocks while executing`);
+    }
 
-  globalState.parent.beforeEach = convertCallback(cb);
+    globalState.parent[triggerName] = convertCallback(cb);
+  };
 }
 
+export const beforeEach = setTrigger("beforeEach");
+export const afterEach = setTrigger("afterEach");
+export const before = setTrigger("before");
+export const after = setTrigger("after");
+
 // run the tests
-export function run(done: SyncCallback = () => {}): number {
+export function run(done: () => void = () => {}) {
   globalState.executing = true;
-  globalDescribe.execute(done);
-  return globalDescribe.numFailing > 0 ? 1 : 0;
+  globalDescribe.execute(() => {
+    // print out summary
+    console.log("");
+    console.log(`${globalDescribe.numPassing} passing`);
+    console.log(`${globalDescribe.numFailing} failing`);
+    console.log(`${globalDescribe.numPending} pending`);
+    done(/*globalDescribe.numFailing > 0 ? 1 : 0*/);
+  });
+}
+
+export function reset() {
+  globalDescribe.describes = [];
+  globalDescribe.tests = [];
+  globalDescribe.numPassing = 0;
+  globalDescribe.numFailing = 0;
+  globalDescribe.numPending = 0;
+
+  globalState.executing = false;
+  globalState.parent = globalDescribe;
 }

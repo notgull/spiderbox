@@ -1,24 +1,26 @@
-/*!
- * index.ts
+"use strict";
+
+/*
+ * common.js
  * Spiderbox - Browser-based testing
- *
+ * 
  * Copyright (c) 2019, not_a_seagull
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * 
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- *
+ * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *
+ * 
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -30,45 +32,21 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-export declare type SyncCallback = () => void;
-export declare type CBCallback = (done: SyncCallback) => void;
-export declare type AsyncCallback = () => Promise<void>;
-export declare type ItCallback = SyncCallback | CBCallback | AsyncCallback;
-declare class DescribeBlock {
-    name: string;
-    indentation: number;
-    before: CBCallback;
-    beforeEach: CBCallback;
-    after: CBCallback;
-    afterEach: CBCallback;
-    numPassing: number;
-    numFailing: number;
-    numPending: number;
-    tests: Array<ItBlock>;
-    describes: Array<DescribeBlock>;
-    private ident;
-    parent: DescribeBlock | null;
-    constructor(name: string, indentation: number);
-    log(msg: string): void;
-    execute(done: SyncCallback): void;
+
+let spiderbox;
+try {
+  spiderbox = require("./../index");
+} catch {
+  spiderbox = require("./../../index");
 }
-export declare const globalDescribe: DescribeBlock;
-export declare function describe(name: string, cb: SyncCallback): void;
-declare class ItBlock {
-    test: CBCallback;
-    _skip: boolean;
-    timeout: number;
-    name: string;
-    parent: DescribeBlock | null;
-    constructor(name: string, test: ItCallback, timeout?: number);
-    static skipped(name: string): ItBlock;
-    skip(): void;
-}
-export declare function it(name: string, cb: ItCallback): void;
-export declare const beforeEach: (cb: ItCallback) => void;
-export declare const afterEach: (cb: ItCallback) => void;
-export declare const before: (cb: ItCallback) => void;
-export declare const after: (cb: ItCallback) => void;
-export declare function run(done?: () => void): void;
-export declare function reset(): void;
-export {};
+
+global.spiderbox = spiderbox;
+
+global.sbDescribe = spiderbox.describe;
+global.sbIt = spiderbox.it;
+global.sbRun = spiderbox.run;
+
+global.expect = require("chai").expect;
+global.sinon = require("sinon");
+
+global.clean = spiderbox.reset;

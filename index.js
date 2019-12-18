@@ -1,4 +1,3 @@
-"use strict";function _typeof(e){return(_typeof="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}
 /*!
  * index.ts
  * Spiderbox - Browser-based testing
@@ -30,4 +29,237 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */!function(e){if("object"===("undefined"==typeof module?"undefined":_typeof(module))&&"object"===_typeof(module.exports)){var t=e(require,exports);t!==undefined&&(module.exports=t)}else"function"==typeof define&&define.amd&&define(["require","exports"],e)}((function(e,t){t.__esModule=!0;var n=function(e){e()},i={executing:!1,parent:null};function o(e){var t,n=Function.prototype.toString.call(e);return n.substring(n.indexOf("(")+1,n.indexOf(")")).length>0?e:"AsyncFunction"===e[Symbol.toStringTag]?(t=e,function(e){t().then((function(){e()}))}):function(e){return function(t){e(),t()}}(e)}function r(e,t,n){!function i(o){o>=t.length?n():t[o].call(e,(function(){i(o+1)}))}(0)}var u=function(){function e(e,t){this.name=e,this.indentation=t,this.before=n,this.beforeEach=n,this.after=n,this.afterEach=n,this.numPassing=0,this.numFailing=0,this.numPending=0,this.tests=[],this.describes=[],this.parent=null,this.ident="";for(var i=0;i<t;i++)this.ident+="  "}return e.prototype.log=function(e){console.log(""+this.ident+e)},e.prototype.execute=function(t){var n=this;if(!i.executing)throw new Error("Not in execution state");"__global"!==this.name&&this.log(this.name);var o=function(t){return function(i){n.beforeEach((function(){e.prototype.execute.call(t,(function(){n.afterEach(i)}))}))}},u=function(e){return function(t){n.beforeEach((function(){var i;new Date;try{i=setTimeout((function(){throw new Error("Timeout of "+e.timeout+" reached")}),e.timeout),e.test.call(e,(function(){clearTimeout(i),n.numPassing++,n.log("  ✓ "+e.name),n.afterEach(t)}))}catch(o){clearTimeout(i),n.numFailing++,n.log("  ✗ "+e.name),n.afterEach(t)}}))}},c=function(e){return function(t){n.numPending++,n.log("  - "+e.name),t()}};this.before((function(){for(var e=[],i=0;i<n.describes.length;i++)e.push(o.call(n,n.describes[i]));var f=[];for(i=0;i<n.tests.length;i++)n.tests[i]._skip?f.push(c.call(n,n.tests[i])):f.push(u.call(n,n.tests[i]));r(n,e,(function(){r(n,f,(function(){n.after(t)}))}))}))},e}();t.globalDescribe=new u("__global",-1),i.parent=t.globalDescribe,t.describe=function(e,t){if(i.executing)throw new Error("Cannot define new describe blocks while executing");var n=i.parent,o=new u(e,n.indentation+1);o.parent=n,i.parent=o,t.call(o),i.parent=n,n.describes.push(o)};var c=function(){function e(e,t,n){void 0===n&&(n=1e4),this.name=e,this.test=o(t),this._skip=!1,this.timeout=n,this.parent=null}return e.skipped=function(t){var i=new e(t,n,0);return i._skip=!0,i},e.prototype.skip=function(){this._skip=!0},e}();t.it=function(e,t){if(i.executing)throw new Error("Cannot define new it blocks while executing");var n,o=i.parent;(n=t?new c(e,t):c.skipped(e)).parent=o,o.tests.push(n)},t.beforeEach=function(e){if(i.executing)throw new Error("Cannot define before each while executing");i.parent.beforeEach=o(e)},t.run=function(e){return void 0===e&&(e=function(){}),i.executing=!0,t.globalDescribe.execute(e),t.globalDescribe.numFailing>0?1:0}}));
+ */
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports"], factory);
+    }
+})(function (require, exports) {
+    "use strict";
+    exports.__esModule = true;
+    var defaultCallback = function (done) { done(); };
+    var globalState = {
+        executing: false,
+        parent: null
+    };
+    function convertCallback(cb) {
+        var funcString = Function.prototype.toString.call(cb);
+        var arg = funcString.substring(funcString.indexOf("(") + 1, funcString.indexOf(")"));
+        if (arg.length > 0) {
+            return cb;
+        }
+        if (cb[Symbol.toStringTag] === "AsyncFunction") {
+            return (function (inner) {
+                return function (done) {
+                    inner().then(function () { done(); });
+                };
+            })(cb);
+        }
+        return (function (inner) {
+            return function (done) {
+                inner();
+                done();
+            };
+        })(cb);
+    }
+    function runCallbackFunctions(callOn, funcs, done) {
+        var cb = function (index) {
+            if (index >= funcs.length) {
+                done();
+                return;
+            }
+            var func = funcs[index];
+            func.call(callOn, function () {
+                cb(index + 1);
+            });
+        };
+        cb(0);
+    }
+    var DescribeBlock = (function () {
+        function DescribeBlock(name, indentation) {
+            this.name = name;
+            this.indentation = indentation;
+            this.before = defaultCallback;
+            this.beforeEach = defaultCallback;
+            this.after = defaultCallback;
+            this.afterEach = defaultCallback;
+            this.numPassing = 0;
+            this.numFailing = 0;
+            this.numPending = 0;
+            this.tests = [];
+            this.describes = [];
+            this.parent = null;
+            this.ident = "";
+            for (var i = 0; i < indentation; i++) {
+                this.ident += "  ";
+            }
+        }
+        DescribeBlock.prototype.log = function (msg) {
+            console.log("" + this.ident + msg);
+        };
+        DescribeBlock.prototype.execute = function (done) {
+            var _this = this;
+            if (!globalState.executing) {
+                throw new Error("Not in execution state");
+            }
+            if (this.name !== "__global") {
+                this.log(this.name);
+            }
+            var perDescribe = function (desc) {
+                return function (done) {
+                    _this.beforeEach(function () {
+                        DescribeBlock.prototype.execute.call(desc, function () {
+                            _this.afterEach(done);
+                        });
+                    });
+                };
+            };
+            var perTest = function (test) {
+                return function (done) {
+                    _this.beforeEach(function () {
+                        var begin = new Date();
+                        var timeout;
+                        try {
+                            timeout = setTimeout(function () { throw new Error("Timeout of " + test.timeout + " reached"); }, test.timeout);
+                            test.test.call(test, function () {
+                                clearTimeout(timeout);
+                                _this.numPassing++;
+                                _this.log("  \u2713 " + test.name);
+                                _this.afterEach(done);
+                            });
+                        }
+                        catch (err) {
+                            clearTimeout(timeout);
+                            _this.numFailing++;
+                            _this.log("  \u2717 " + test.name);
+                            _this.afterEach(done);
+                        }
+                    });
+                };
+            };
+            var pendingTest = function (test) {
+                return function (done) {
+                    _this.numPending++;
+                    _this.log("  - " + test.name);
+                    done();
+                };
+            };
+            this.before(function () {
+                var descFuncs = [];
+                for (var i = 0; i < _this.describes.length; i++) {
+                    descFuncs.push(perDescribe.call(_this, _this.describes[i]));
+                }
+                var testFuncs = [];
+                for (var i = 0; i < _this.tests.length; i++) {
+                    if (_this.tests[i]._skip) {
+                        testFuncs.push(pendingTest.call(_this, _this.tests[i]));
+                    }
+                    else {
+                        testFuncs.push(perTest.call(_this, _this.tests[i]));
+                    }
+                }
+                runCallbackFunctions(_this, descFuncs, function () {
+                    runCallbackFunctions(_this, testFuncs, function () {
+                        _this.after(function () {
+                            if (!(_this.name === "__global")) {
+                                _this.parent.numPassing += _this.numPassing;
+                                _this.parent.numFailing += _this.numFailing;
+                                _this.parent.numPending += _this.numPending;
+                            }
+                            done();
+                        });
+                    });
+                });
+            });
+        };
+        return DescribeBlock;
+    }());
+    exports.globalDescribe = new DescribeBlock("__global", -1);
+    globalState.parent = exports.globalDescribe;
+    function describe(name, cb) {
+        if (globalState.executing) {
+            throw new Error("Cannot define new describe blocks while executing");
+        }
+        var parentBlock = globalState.parent;
+        var describeBlock = new DescribeBlock(name, parentBlock.indentation + 1);
+        describeBlock.parent = parentBlock;
+        globalState.parent = describeBlock;
+        cb.call(describeBlock);
+        globalState.parent = parentBlock;
+        parentBlock.describes.push(describeBlock);
+    }
+    exports.describe = describe;
+    var ItBlock = (function () {
+        function ItBlock(name, test, timeout) {
+            if (timeout === void 0) { timeout = 10000; }
+            this.name = name;
+            this.test = convertCallback(test);
+            this._skip = false;
+            this.timeout = timeout;
+            this.parent = null;
+        }
+        ItBlock.skipped = function (name) {
+            var itBlock = new ItBlock(name, defaultCallback, 0);
+            itBlock._skip = true;
+            return itBlock;
+        };
+        ItBlock.prototype.skip = function () {
+            this._skip = true;
+        };
+        return ItBlock;
+    }());
+    function it(name, cb) {
+        if (globalState.executing) {
+            throw new Error("Cannot define new it blocks while executing");
+        }
+        var parentBlock = globalState.parent;
+        var itBlock;
+        if (cb) {
+            itBlock = new ItBlock(name, cb);
+        }
+        else {
+            itBlock = ItBlock.skipped(name);
+        }
+        itBlock.parent = parentBlock;
+        parentBlock.tests.push(itBlock);
+    }
+    exports.it = it;
+    function setTrigger(triggerName) {
+        return function (cb) {
+            if (globalState.executing) {
+                throw new Error("Cannot define " + triggerName + " blocks while executing");
+            }
+            globalState.parent[triggerName] = convertCallback(cb);
+        };
+    }
+    exports.beforeEach = setTrigger("beforeEach");
+    exports.afterEach = setTrigger("afterEach");
+    exports.before = setTrigger("before");
+    exports.after = setTrigger("after");
+    function run(done) {
+        if (done === void 0) { done = function () { }; }
+        globalState.executing = true;
+        exports.globalDescribe.execute(function () {
+            console.log("");
+            console.log(exports.globalDescribe.numPassing + " passing");
+            console.log(exports.globalDescribe.numFailing + " failing");
+            console.log(exports.globalDescribe.numPending + " pending");
+            done();
+        });
+    }
+    exports.run = run;
+    function reset() {
+        exports.globalDescribe.describes = [];
+        exports.globalDescribe.tests = [];
+        exports.globalDescribe.numPassing = 0;
+        exports.globalDescribe.numFailing = 0;
+        exports.globalDescribe.numPending = 0;
+        globalState.executing = false;
+        globalState.parent = exports.globalDescribe;
+    }
+    exports.reset = reset;
+});

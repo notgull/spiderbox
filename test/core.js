@@ -33,22 +33,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-const spiderbox = require("./../index");
-
-const sbDescribe = spiderbox.describe;
-const sbIt = spiderbox.it;
-const sbRun = spiderbox.run;
-
-const { expect } = require("chai");
-const sinon = require("sinon");
-
-function clean() {
-  spiderbox.globalDescribe.tests = [];
-  spiderbox.globalDescribe.describes = [];
-}
-
-// clean up the tree after all executions
-afterEach(clean);
+require("./common");
 
 describe("Testing setup tree", () => {
   beforeEach(() => {
@@ -74,6 +59,8 @@ describe("Testing setup tree", () => {
   it("should have the second test block", () => {
     expect(spiderbox.globalDescribe.describes[0].tests[1]).to.have.property("name", "Test 2");
   });
+
+  afterEach(clean);
 });
 
 describe("Testing execution", () => {
@@ -92,7 +79,7 @@ describe("Testing execution", () => {
       sbIt("Call03", () => call3());
     });
 
-    sbRun(done);
+    expect(sbRun(done)).to.equal(0);
   });
 
   it("should have called each of the fakes", () => {
@@ -100,4 +87,12 @@ describe("Testing execution", () => {
     expect(call2.called).to.equal(true);
     expect(call3.called).to.equal(true);
   });
+
+  it("should have 3 passes", () => {
+    expect(spiderbox.globalDescribe.numPassing).to.equal(3);
+    expect(spiderbox.globalDescribe.numFailing).to.equal(0);
+    expect(spiderbox.globalDescribe.numPending).to.equal(0);
+  });
+
+  after(clean);
 });
