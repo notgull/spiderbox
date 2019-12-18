@@ -8,7 +8,7 @@
     "babel": "npx babel index.js >> index.babel.js && mv index.babel.js index.js",
     "uglify": "npx terser --compress --mangle --ie8 -- index.js >> index.terser.js && mv index.terser.js index.js",
     "build": "npm run tsc && npm run babel && npm run uglify",
-    "test": "npx mocha",
+    "test": "npx mocha \"test/**/*.js\"",
     "buildtest": "npm run build && npm run test"
   },
   "author": "not_a_seagull",

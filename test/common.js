@@ -45,8 +45,11 @@ global.spiderbox = spiderbox;
 global.sbDescribe = spiderbox.describe;
 global.sbIt = spiderbox.it;
 global.sbRun = spiderbox.run;
+global.sbBefore = spiderbox.before;
 
 global.expect = require("chai").expect;
 global.sinon = require("sinon");
+
+console.log = sinon.fake();
 
 global.clean = spiderbox.reset;

@@ -1,7 +1,7 @@
 "use strict";
 
 /*
- * error.js
+ * hooks/before.js
  * Spiderbox - Browser-based testing
  * 
  * Copyright (c) 2019, not_a_seagull
@@ -33,13 +33,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-require("./common");
+require("./../common");
 
-describe("Testing pending tests", () => {
+describe("Testing hooks", () => {
+  let call;
+
   before(() => {
-    sbDescribe("Pending tests", () => {
-      sbIt("should succeed", () => { });
-      sbIt("should be pending");
+    call = sinon.fake();
+    sbDescribe("Before hook", () => {
+      sbBefore(() => {
+        call();
+      });
+      sbIt("Test 01", () => {});
+      sbIt("Test 02", () => {});
     });
   });
 
@@ -47,10 +53,8 @@ describe("Testing pending tests", () => {
     sbRun(done);
   });
 
-  it("should have 1 success and 1 pending", () => {
-    expect(spiderbox.globalDescribe.numPassing).to.equal(1);
-    expect(spiderbox.globalDescribe.numFailing).to.equal(0);
-    expect(spiderbox.globalDescribe.numPending).to.equal(1);
+  it("should have only called the before call once", () => {
+    expect(call.callCount).to.equal(1);
   });
 
   after(clean);

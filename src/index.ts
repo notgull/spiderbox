@@ -247,6 +247,12 @@ export function describe(name: string, cb: SyncCallback) {
     throw new Error("Cannot define new describe blocks while executing");
   }
 
+  if (!cb) {
+    // @ts-ignore
+    cb = name;
+    name = "";
+  }
+
   // load the parent describe block
   const parentBlock = globalState.parent;
 
